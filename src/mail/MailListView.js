@@ -11,7 +11,15 @@ import {getMailFolderType, MailFolderType, ReplyType} from "../api/common/Tutano
 import {MailView} from "./MailView"
 import {MailTypeRef} from "../api/entities/tutanota/Mail"
 import {assertMainOrNode} from "../api/Env"
-import {getArchiveFolder, getFolderName, getInboxFolder, getSenderOrRecipientHeading, isTutanotaTeamMail, showDeleteConfirmationDialog} from "./MailUtils"
+import {
+	getArchiveFolder,
+	getFolderName,
+	getInboxFolder,
+	getSenderOrRecipientHeading,
+	isTutanotaTeamMail,
+	showDeleteConfirmationDialog,
+	hasDifferentEnvelopeSender
+} from "./MailUtils"
 import {findAndApplyMatchingRule, isInboxList} from "./InboxRuleHandler"
 import {NotFoundError} from "../api/common/error/RestError"
 import {px, size} from "../gui/size"
@@ -185,6 +193,7 @@ export class MailRow {
 	_showFolderIcon: boolean;
 	_domFolderIcons: {[key: MailFolderTypeEnum]: HTMLElement};
 	_domTeamLabel: HTMLElement;
+	_domDifferentSenderWarning: HTMLElement;
 
 	constructor(showFolderIcon: boolean) {
 		this.top = 0
@@ -232,6 +241,12 @@ export class MailRow {
 		} else {
 			this._domTeamLabel.style.display = 'none'
 		}
+
+		if (hasDifferentEnvelopeSender(mail)) {
+			this._domDifferentSenderWarning.style.display = ''
+		} else {
+			this._domDifferentSenderWarning.style.display = 'none'
+		}
 	}
 
 
@@ -275,6 +290,7 @@ export class MailRow {
 			m(".flex-grow.min-width-0", [
 				m(".top.flex.badge-line-height", [
 					m(Badge, {classes: ".small.mr-s", oncreate: (vnode) => this._domTeamLabel = vnode.dom}, "Tutanota Team"),
+					m(Icon, {icon: Icons.Warning, oncreate: (vnode) => this._domDifferentSenderWarning = vnode.dom}),
 					m("small.text-ellipsis", {oncreate: (vnode) => this._domSender = vnode.dom}),
 					m(".flex-grow"),
 					m("small.text-ellipsis.flex-fixed", {oncreate: (vnode) => this._domDate = vnode.dom})
